@@ -1,4 +1,5 @@
 import {
+  Button,
   Box,
   Divider,
   LinearProgress,
@@ -192,6 +193,19 @@ export const TaskSummary = React.memo((props: TaskSummaryProps) => {
       )}
       <DialogContent>{returnDialogContent()}</DialogContent>
       <DialogActions sx={{ justifyContent: 'center' }}>
+        <Button
+          onClick={() => setOpenTaskDetailsLogs(true)}
+          size="small"
+          variant="contained"
+          color="primary"
+          disabled={!taskState}
+          sx={{
+            fontSize: '1rem',
+            padding: '6px 12px',
+          }}
+        >
+          View Task Steps
+        </Button>
         <TaskCancelButton
           taskId={taskState ? taskState.booking.id : null}
           size="small"
