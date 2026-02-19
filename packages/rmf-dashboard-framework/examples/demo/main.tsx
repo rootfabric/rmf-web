@@ -60,11 +60,44 @@ const tasksWorkspace: InitialWindow[] = [
   { layout: { x: 8, y: 0, w: 5, h: 8 }, microApp: mapApp },
 ];
 
+function toWebsocketUrl(url: string): string {
+  const trimmed = (url || '').trim();
+  if (!trimmed) {
+    return '';
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === 'http:') {
+      parsed.protocol = 'ws:';
+    } else if (parsed.protocol === 'https:') {
+      parsed.protocol = 'wss:';
+    }
+    return parsed.toString().replace(/\/$/, '');
+  } catch {
+    return trimmed;
+  }
+}
+
+function deriveTrajectoryServerUrl(apiServerUrl: string): string {
+  try {
+    const parsed = new URL(apiServerUrl);
+    const scheme = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${scheme}//${parsed.hostname}:8006`;
+  } catch {
+    return 'ws://localhost:8006';
+  }
+}
+
+const apiServerUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').trim();
+const trajectoryServerUrl = toWebsocketUrl(
+  (import.meta.env.VITE_TRAJECTORY_SERVER_URL || deriveTrajectoryServerUrl(apiServerUrl)).trim(),
+);
+
 export default function App() {
   return (
     <RmfDashboard
-      apiServerUrl="http://localhost:8000"
-      trajectoryServerUrl="http://localhost:8006"
+      apiServerUrl={apiServerUrl}
+      trajectoryServerUrl={trajectoryServerUrl}
       authenticator={new StubAuthenticator()}
       helpLink="https://osrf.github.io/ros2multirobotbook/rmf-core.html"
       reportIssueLink="https://github.com/open-rmf/rmf-web/issues"
