@@ -103,7 +103,7 @@ export const Map = styled((props: MapProps) => {
 
       if (cancel || !trajManager) return;
 
-      const resp = await trajManager.latestTrajectory({
+      let resp = await trajManager.latestTrajectory({
         request: 'trajectory',
         param: {
           map_name: currentLevel.name,
@@ -112,6 +112,39 @@ export const Map = styled((props: MapProps) => {
         },
         token: authenticator.token,
       });
+
+      // Some deployments publish trajectories with a map_name that does not
+      // exactly match building_map level names (e.g. "1" vs "L1").
+      if (!resp.values || resp.values.length === 0) {
+        const fallbackResp = await trajManager.latestTrajectory({
+          request: 'trajectory',
+          param: {
+            map_name: '',
+            duration: trajectoryTime,
+            trim: true,
+          },
+          token: authenticator.token,
+        });
+        if (fallbackResp.values && fallbackResp.values.length > 0) {
+          const sameLevelValues = fallbackResp.values.filter(
+            (v) => v.map_name === currentLevel.name,
+          );
+          if (sameLevelValues.length > 0) {
+            resp = {
+              ...fallbackResp,
+              values: sameLevelValues,
+            };
+          } else {
+            debug(
+              `trajectory map_name mismatch: level='${currentLevel.name}', server maps=[${[
+                ...new Set(fallbackResp.values.map((v) => v.map_name)),
+              ].join(', ')}]`,
+            );
+            resp = fallbackResp;
+          }
+        }
+      }
+
       const flatConflicts = resp.conflicts.flatMap((c) => c);
 
       debug('set trajectories');

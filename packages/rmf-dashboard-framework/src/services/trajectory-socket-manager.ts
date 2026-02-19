@@ -30,9 +30,36 @@ export default class TrajectorySocketManager extends EventEmitter<Events> {
     webSocket: WebSocket | undefined,
   ): Promise<MessageEvent> {
     if (!webSocket) throw Error('Websocket not initialized!');
+    if (webSocket.readyState === WebSocket.CONNECTING) {
+      await new Promise<void>((resolve, reject) => {
+        const onOpen = () => {
+          cleanup();
+          resolve();
+        };
+        const onError = () => {
+          cleanup();
+          reject(Error('Websocket connection failed'));
+        };
+        const onClose = () => {
+          cleanup();
+          reject(Error('Websocket closed before opening'));
+        };
+        const cleanup = () => {
+          webSocket.removeEventListener('open', onOpen);
+          webSocket.removeEventListener('error', onError);
+          webSocket.removeEventListener('close', onClose);
+        };
+        webSocket.addEventListener('open', onOpen);
+        webSocket.addEventListener('error', onError);
+        webSocket.addEventListener('close', onClose);
+      });
+    }
+    if (webSocket.readyState !== WebSocket.OPEN) {
+      throw Error(`Websocket is not open (state=${webSocket.readyState})`);
+    }
+
     // response should come in the order that requests are sent, this should allow multiple messages
     // in-flight while processing the responses in the order they are sent.
-    webSocket.send(payload);
     // waits for the earlier response to be processed.
     if (this._ongoingRequest) {
       await this._ongoingRequest;
@@ -43,6 +70,8 @@ export default class TrajectorySocketManager extends EventEmitter<Events> {
         this._ongoingRequest = null;
         res(e);
       });
+      // Listen first, then send, so a fast local response cannot be missed.
+      webSocket.send(payload);
     });
     return this._ongoingRequest;
   }
