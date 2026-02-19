@@ -60,11 +60,35 @@ const tasksWorkspace: InitialWindow[] = [
   { layout: { x: 8, y: 0, w: 5, h: 8 }, microApp: mapApp },
 ];
 
+function _resolveTrajectoryServerUrl(apiServerUrl: string): string {
+  const explicitUrl = import.meta.env.VITE_TRAJECTORY_SERVER_URL as string | undefined;
+  if (explicitUrl && explicitUrl.trim()) {
+    return explicitUrl.trim();
+  }
+
+  try {
+    const apiUrl = new URL(apiServerUrl);
+    apiUrl.protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+    apiUrl.port = (import.meta.env.VITE_TRAJECTORY_PORT as string | undefined)?.trim() || '8006';
+    apiUrl.pathname = '';
+    apiUrl.search = '';
+    apiUrl.hash = '';
+    return apiUrl.toString().replace(/\/$/, '');
+  } catch (err) {
+    console.warn(`Invalid VITE_API_URL='${apiServerUrl}', fallback to ws://127.0.0.1:8006`, err);
+    return 'ws://127.0.0.1:8006';
+  }
+}
+
 export default function App() {
+  const apiServerUrl =
+    (import.meta.env.VITE_API_URL as string | undefined)?.trim() || 'http://127.0.0.1:8000';
+  const trajectoryServerUrl = _resolveTrajectoryServerUrl(apiServerUrl);
+
   return (
     <RmfDashboard
-      apiServerUrl="http://localhost:8000"
-      trajectoryServerUrl="http://localhost:8006"
+      apiServerUrl={apiServerUrl}
+      trajectoryServerUrl={trajectoryServerUrl}
       authenticator={new StubAuthenticator()}
       helpLink="https://osrf.github.io/ros2multirobotbook/rmf-core.html"
       reportIssueLink="https://github.com/open-rmf/rmf-web/issues"

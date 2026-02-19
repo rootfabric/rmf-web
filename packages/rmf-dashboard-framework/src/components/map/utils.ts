@@ -85,12 +85,24 @@ export const findSceneBoundingBoxFromThreeFiber = (level: Level | undefined): Bo
   if (!level) {
     return;
   }
+
   let minX = Infinity;
   let minY = Infinity;
   let minZ = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
   let maxZ = -Infinity;
+  let hasGeometry = false;
+
+  const expandBounds = (x: number, y: number, z: number) => {
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    minZ = Math.min(minZ, z);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+    maxZ = Math.max(maxZ, z);
+    hasGeometry = true;
+  };
 
   const walls = graphToWalls(level.wall_graph);
   walls.forEach((wall) => {
@@ -104,7 +116,40 @@ export const findSceneBoundingBoxFromThreeFiber = (level: Level | undefined): Bo
     maxX = Math.max(maxX, x + width / 2);
     maxY = Math.max(maxY, y + width / 2);
     maxZ = Math.max(maxZ, z + height / 2);
+    hasGeometry = true;
   });
+
+  // Some maps (e.g. simple custom maps) have empty wall_graph. In that case,
+  // fallback to navigation and door geometry so camera framing remains valid.
+  if (!hasGeometry) {
+    level.nav_graphs.forEach((graph) => {
+      graph.vertices.forEach((v) => {
+        expandBounds(v.x, v.y, level.elevation);
+      });
+    });
+
+    level.doors.forEach((door) => {
+      expandBounds(door.v1_x, door.v1_y, level.elevation);
+      expandBounds(door.v2_x, door.v2_y, level.elevation);
+    });
+  }
+
+  if (!hasGeometry) {
+    return;
+  }
+
+  if (minX === maxX) {
+    minX -= 1;
+    maxX += 1;
+  }
+  if (minY === maxY) {
+    minY -= 1;
+    maxY += 1;
+  }
+  if (minZ === maxZ) {
+    minZ -= 1;
+    maxZ += 1;
+  }
 
   return new Box3(new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ));
 };
