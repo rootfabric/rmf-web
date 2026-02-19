@@ -17,7 +17,7 @@ export const RobotThree = ({ robot, robotLocation, onRobotClick, robotLabel }: R
   const CIRCLE_SEGMENT = 64;
 
   const robotId = `${robot.fleet}/${robot.name}`;
-  const rotationZ = robotLocation[2] - Math.PI;
+  const rotationZ = robotLocation[2];
 
   const position = new Vector3(robotLocation[0], robotLocation[1], STANDAR_Z_POSITION);
 
