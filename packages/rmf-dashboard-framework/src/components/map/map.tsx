@@ -63,8 +63,9 @@ export const Map = styled((props: MapProps) => {
   const [disabledLayers, setDisabledLayers] = React.useState<Record<string, boolean>>({
     'Pickup & Dropoff waypoints': false,
     'Pickup & Dropoff labels': true,
-    Waypoints: true,
+    Waypoints: false,
     'Waypoint labels': true,
+    'Graph lanes': false,
     'Doors & Lifts': false,
     'Doors labels': true,
     Robots: false,
@@ -201,9 +202,7 @@ export const Map = styled((props: MapProps) => {
         : undefined;
       const currentLevel = loggedInDisplayLevel || AppEvents.levelSelect.value || newMap.levels[0];
       AppEvents.levelSelect.next(currentLevel);
-      setWaypoints(
-        getPlaces(newMap).filter((p) => p.level === currentLevel.name && p.vertex.name.length > 0),
-      );
+      setWaypoints(getPlaces(newMap).filter((p) => p.level === currentLevel.name));
       AppEvents.justLoggedIn.next(false);
     };
 
@@ -274,12 +273,38 @@ export const Map = styled((props: MapProps) => {
     })();
 
     buildingMap &&
-      setWaypoints(
-        getPlaces(buildingMap).filter(
-          (p) => p.level === currentLevel.name && p.vertex.name.length > 0,
-        ),
-      );
+      setWaypoints(getPlaces(buildingMap).filter((p) => p.level === currentLevel.name));
   }, [buildingMap, currentLevel]);
+
+  const graphLaneSegments = React.useMemo(() => {
+    if (!currentLevel) {
+      return [] as [Vector3, Vector3][];
+    }
+
+    const segments: [Vector3, Vector3][] = [];
+    const seenPairs = new Set<string>();
+    for (const graph of currentLevel.nav_graphs) {
+      for (const edge of graph.edges) {
+        const v1 = graph.vertices[edge.v1_idx];
+        const v2 = graph.vertices[edge.v2_idx];
+        if (!v1 || !v2) {
+          continue;
+        }
+
+        const a = `${v1.x.toFixed(6)},${v1.y.toFixed(6)}`;
+        const b = `${v2.x.toFixed(6)},${v2.y.toFixed(6)}`;
+        const dedupeKey = a < b ? `${a}|${b}` : `${b}|${a}`;
+        if (seenPairs.has(dedupeKey)) {
+          continue;
+        }
+
+        seenPairs.add(dedupeKey);
+        segments.push([new Vector3(v1.x, v1.y, 3), new Vector3(v2.x, v2.y, 3)]);
+      }
+    }
+
+    return segments;
+  }, [currentLevel]);
 
   const [robots, setRobots] = React.useState<RobotData[]>([]);
   const { current: robotsStore } = React.useRef<Record<string, RobotData>>({});
@@ -576,7 +601,11 @@ export const Map = styled((props: MapProps) => {
             ))}
         {!disabledLayers['Pickup & Dropoff labels'] &&
           waypoints
-            .filter((waypoint) => waypoint.pickupHandler || waypoint.dropoffHandler)
+            .filter(
+              (waypoint) =>
+                (waypoint.pickupHandler || waypoint.dropoffHandler) &&
+                waypoint.vertex.name.length > 0,
+            )
             .map((place, index) => (
               <TextThreeRendering
                 key={index}
@@ -598,7 +627,12 @@ export const Map = styled((props: MapProps) => {
             ))}
         {!disabledLayers['Waypoint labels'] &&
           waypoints
-            .filter((waypoint) => !waypoint.pickupHandler && !waypoint.dropoffHandler)
+            .filter(
+              (waypoint) =>
+                !waypoint.pickupHandler &&
+                !waypoint.dropoffHandler &&
+                waypoint.vertex.name.length > 0,
+            )
             .map((place, index) => (
               <TextThreeRendering
                 key={index}
@@ -606,6 +640,10 @@ export const Map = styled((props: MapProps) => {
                 text={place.vertex.name}
               />
             ))}
+        {!disabledLayers['Graph lanes'] &&
+          graphLaneSegments.map((segment, i) => (
+            <Line key={`graph-lane-${i}`} points={segment} color="#2da6ff" linewidth={2} />
+          ))}
         {buildingMap.lifts.length > 0
           ? buildingMap.lifts.map((lift) =>
               lift.doors.map((door, i) => (
