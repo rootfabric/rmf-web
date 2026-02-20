@@ -107,8 +107,23 @@ export default function App() {
           { taskDefinitionId: 'patrol' },
           { taskDefinitionId: 'delivery' },
           { taskDefinitionId: 'compose-clean' },
+          { taskDefinitionId: 'move_to_waypoint' },
+          { taskDefinitionId: 'pallet_pick' },
+          { taskDefinitionId: 'pallet_drop' },
+          { taskDefinitionId: 'pallet_transfer' },
+          { taskDefinitionId: 'lift_command' },
           { taskDefinitionId: 'custom_compose' },
         ],
+        palletPoints: {
+          wp_8: {
+            approachWaypoint: 'wp_3',
+            retreatWaypoint: 'wp_3',
+          },
+          p2: {
+            approachWaypoint: 'w11',
+            retreatWaypoint: 'w11',
+          },
+        },
         pickupZones: [],
         cartIds: [],
       }}

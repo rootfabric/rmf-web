@@ -29,6 +29,25 @@ import {
   makeDeliveryPickupTaskShortDescription,
 } from './delivery-custom';
 import {
+  LiftCommandTaskDefinition,
+  makeDefaultLiftCommandTaskDescription,
+  makeLiftCommandTaskShortDescription,
+} from './lift-command';
+import {
+  makeDefaultMoveToWaypointTaskDescription,
+  makeDefaultPalletDropTaskDescription,
+  makeDefaultPalletPickTaskDescription,
+  makeDefaultPalletTransferTaskDescription,
+  makeMoveToWaypointTaskShortDescription,
+  makePalletDropTaskShortDescription,
+  makePalletPickTaskShortDescription,
+  makePalletTransferTaskShortDescription,
+  MoveToWaypointTaskDefinition,
+  PalletDropTaskDefinition,
+  PalletPickTaskDefinition,
+  PalletTransferTaskDefinition,
+} from './pallet-flow';
+import {
   makeDefaultPatrolTaskDescription,
   makePatrolTaskShortDescription,
   PatrolTaskDefinition,
@@ -86,6 +105,16 @@ export function getShortDescription(
       return makeDeliveryCustomTaskShortDescription(taskRequest.description, taskDisplayName);
     case CustomComposeTaskDefinition.taskDefinitionId:
       return makeCustomComposeTaskShortDescription(taskRequest.description);
+    case MoveToWaypointTaskDefinition.taskDefinitionId:
+      return makeMoveToWaypointTaskShortDescription(taskRequest.description, taskDisplayName);
+    case PalletPickTaskDefinition.taskDefinitionId:
+      return makePalletPickTaskShortDescription(taskRequest.description, taskDisplayName);
+    case PalletDropTaskDefinition.taskDefinitionId:
+      return makePalletDropTaskShortDescription(taskRequest.description, taskDisplayName);
+    case PalletTransferTaskDefinition.taskDefinitionId:
+      return makePalletTransferTaskShortDescription(taskRequest.description, taskDisplayName);
+    case LiftCommandTaskDefinition.taskDefinitionId:
+      return makeLiftCommandTaskShortDescription(taskRequest.description, taskDisplayName);
     default:
       return `[Unknown] type "${taskRequest.description.category}"`;
   }
@@ -107,6 +136,16 @@ export function getDefaultTaskDefinition(taskDefinitionId: string): TaskDefiniti
       return PatrolTaskDefinition;
     case CustomComposeTaskDefinition.taskDefinitionId:
       return CustomComposeTaskDefinition;
+    case MoveToWaypointTaskDefinition.taskDefinitionId:
+      return MoveToWaypointTaskDefinition;
+    case PalletPickTaskDefinition.taskDefinitionId:
+      return PalletPickTaskDefinition;
+    case PalletDropTaskDefinition.taskDefinitionId:
+      return PalletDropTaskDefinition;
+    case PalletTransferTaskDefinition.taskDefinitionId:
+      return PalletTransferTaskDefinition;
+    case LiftCommandTaskDefinition.taskDefinitionId:
+      return LiftCommandTaskDefinition;
   }
   return undefined;
 }
@@ -128,6 +167,16 @@ export function getDefaultTaskDescription(
       return makeDefaultPatrolTaskDescription();
     case CustomComposeTaskDefinition.taskDefinitionId:
       return '';
+    case MoveToWaypointTaskDefinition.taskDefinitionId:
+      return makeDefaultMoveToWaypointTaskDescription();
+    case PalletPickTaskDefinition.taskDefinitionId:
+      return makeDefaultPalletPickTaskDescription();
+    case PalletDropTaskDefinition.taskDefinitionId:
+      return makeDefaultPalletDropTaskDescription();
+    case PalletTransferTaskDefinition.taskDefinitionId:
+      return makeDefaultPalletTransferTaskDescription();
+    case LiftCommandTaskDefinition.taskDefinitionId:
+      return makeDefaultLiftCommandTaskDescription();
     default:
       return undefined;
   }

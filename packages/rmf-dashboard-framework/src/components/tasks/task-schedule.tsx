@@ -341,6 +341,7 @@ export const TaskSchedule = () => {
           tasksToDisplay={taskRegistry.taskDefinitions}
           patrolWaypoints={waypointNames}
           cleaningZones={cleaningZoneNames}
+          palletPoints={taskRegistry.palletPoints}
           pickupPoints={pickupPoints}
           dropoffPoints={dropoffPoints}
           open={openCreateTaskForm}

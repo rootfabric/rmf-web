@@ -465,6 +465,7 @@ export const AppBar = React.memo(
             cartIds={taskRegistry.cartIds}
             pickupPoints={pickupPoints}
             dropoffPoints={dropoffPoints}
+            palletPoints={taskRegistry.palletPoints}
             favoritesTasks={favoritesTasks}
             open={openCreateTaskForm}
             onClose={() => setOpenCreateTaskForm(false)}

@@ -81,6 +81,31 @@ import {
   makeDeliveryPickupTaskBookingLabel,
 } from './types/delivery-custom';
 import {
+  LiftCommandTaskDefinition,
+  LiftCommandTaskDescription,
+  LiftCommandTaskForm,
+  makeLiftCommandTaskBookingLabel,
+} from './types/lift-command';
+import {
+  makeMoveToWaypointTaskBookingLabel,
+  makePalletDropTaskBookingLabel,
+  makePalletPickTaskBookingLabel,
+  makePalletTransferTaskBookingLabel,
+  MoveToWaypointTaskDefinition,
+  MoveToWaypointTaskDescription,
+  MoveToWaypointTaskForm,
+  PalletDropTaskDefinition,
+  PalletDropTaskDescription,
+  PalletDropTaskForm,
+  PalletPickTaskDefinition,
+  PalletPickTaskDescription,
+  PalletPickTaskForm,
+  PalletPointsMap,
+  PalletTransferTaskDefinition,
+  PalletTransferTaskDescription,
+  PalletTransferTaskForm,
+} from './types/pallet-flow';
+import {
   makePatrolTaskBookingLabel,
   PatrolTaskDefinition,
   PatrolTaskDescription,
@@ -101,7 +126,12 @@ export type TaskDescription =
   | DeliveryCustomTaskDescription
   | PatrolTaskDescription
   | DeliveryTaskDescription
-  | ComposeCleanTaskDescription;
+  | ComposeCleanTaskDescription
+  | MoveToWaypointTaskDescription
+  | PalletPickTaskDescription
+  | PalletDropTaskDescription
+  | PalletTransferTaskDescription
+  | LiftCommandTaskDescription;
 
 const classes = {
   title: 'dialogue-info-value',
@@ -301,6 +331,7 @@ export interface TaskFormProps extends Omit<ConfirmationDialogProps, 'onConfirmC
   cartIds?: string[];
   pickupPoints?: Record<string, string>;
   dropoffPoints?: Record<string, string>;
+  palletPoints?: PalletPointsMap;
   favoritesTasks?: TaskFavorite[];
   schedule?: Schedule;
   taskRequest?: TaskRequest;
@@ -339,6 +370,7 @@ export function TaskForm({
   cartIds = [],
   pickupPoints = {},
   dropoffPoints = {},
+  palletPoints = {},
   favoritesTasks = [],
   schedule,
   taskRequest,
@@ -543,6 +575,63 @@ export function TaskForm({
             onValidate={onValidate}
           />
         );
+      case LiftCommandTaskDefinition.taskDefinitionId:
+        return (
+          <LiftCommandTaskForm
+            taskDesc={currentTaskRequest.description as LiftCommandTaskDescription}
+            onChange={(desc) =>
+              handleTaskDescriptionChange(LiftCommandTaskDefinition.requestCategory, desc)
+            }
+            onValidate={onValidate}
+          />
+        );
+      case MoveToWaypointTaskDefinition.taskDefinitionId:
+        return (
+          <MoveToWaypointTaskForm
+            taskDesc={currentTaskRequest.description as MoveToWaypointTaskDescription}
+            patrolWaypoints={patrolWaypoints}
+            onChange={(desc) =>
+              handleTaskDescriptionChange(MoveToWaypointTaskDefinition.requestCategory, desc)
+            }
+            onValidate={onValidate}
+          />
+        );
+      case PalletPickTaskDefinition.taskDefinitionId:
+        return (
+          <PalletPickTaskForm
+            taskDesc={currentTaskRequest.description as PalletPickTaskDescription}
+            patrolWaypoints={patrolWaypoints}
+            palletPoints={palletPoints}
+            onChange={(desc) =>
+              handleTaskDescriptionChange(PalletPickTaskDefinition.requestCategory, desc)
+            }
+            onValidate={onValidate}
+          />
+        );
+      case PalletDropTaskDefinition.taskDefinitionId:
+        return (
+          <PalletDropTaskForm
+            taskDesc={currentTaskRequest.description as PalletDropTaskDescription}
+            patrolWaypoints={patrolWaypoints}
+            palletPoints={palletPoints}
+            onChange={(desc) =>
+              handleTaskDescriptionChange(PalletDropTaskDefinition.requestCategory, desc)
+            }
+            onValidate={onValidate}
+          />
+        );
+      case PalletTransferTaskDefinition.taskDefinitionId:
+        return (
+          <PalletTransferTaskForm
+            taskDesc={currentTaskRequest.description as PalletTransferTaskDescription}
+            patrolWaypoints={patrolWaypoints}
+            palletPoints={palletPoints}
+            onChange={(desc) =>
+              handleTaskDescriptionChange(PalletTransferTaskDefinition.requestCategory, desc)
+            }
+            onValidate={onValidate}
+          />
+        );
       case DeliveryPickupTaskDefinition.taskDefinitionId:
         return (
           <DeliveryPickupTaskForm
@@ -668,6 +757,21 @@ export function TaskForm({
           break;
         case ComposeCleanTaskDefinition.taskDefinitionId:
           requestBookingLabel = makeComposeCleanTaskBookingLabel(request.description);
+          break;
+        case LiftCommandTaskDefinition.taskDefinitionId:
+          requestBookingLabel = makeLiftCommandTaskBookingLabel(request.description);
+          break;
+        case MoveToWaypointTaskDefinition.taskDefinitionId:
+          requestBookingLabel = makeMoveToWaypointTaskBookingLabel(request.description);
+          break;
+        case PalletPickTaskDefinition.taskDefinitionId:
+          requestBookingLabel = makePalletPickTaskBookingLabel(request.description);
+          break;
+        case PalletDropTaskDefinition.taskDefinitionId:
+          requestBookingLabel = makePalletDropTaskBookingLabel(request.description);
+          break;
+        case PalletTransferTaskDefinition.taskDefinitionId:
+          requestBookingLabel = makePalletTransferTaskBookingLabel(request.description);
           break;
         case CustomComposeTaskDefinition.taskDefinitionId:
           requestBookingLabel = makeCustomComposeTaskBookingLabel();

@@ -51,7 +51,16 @@ export interface AllowedTask {
   /**
    * The task definition to configure.
    */
-  taskDefinitionId: 'patrol' | 'delivery' | 'compose-clean' | 'custom_compose';
+  taskDefinitionId:
+    | 'patrol'
+    | 'delivery'
+    | 'compose-clean'
+    | 'custom_compose'
+    | 'move_to_waypoint'
+    | 'pallet_pick'
+    | 'pallet_drop'
+    | 'pallet_transfer'
+    | 'lift_command';
 
   /**
    * Configure the display name for the task definition.
@@ -157,8 +166,9 @@ export function RmfDashboard(props: RmfDashboardProps) {
       }),
       pickupZones: tasks.pickupZones,
       cartIds: tasks.cartIds,
+      palletPoints: tasks.palletPoints,
     }),
-    [tasks.allowedTasks, tasks.pickupZones, tasks.cartIds],
+    [tasks.allowedTasks, tasks.pickupZones, tasks.cartIds, tasks.palletPoints],
   );
 
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
