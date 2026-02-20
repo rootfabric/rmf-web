@@ -118,8 +118,12 @@ export const AppBar = React.memo(
       FireAlarmTriggerState | undefined
     >(undefined);
 
-    const { waypointNames, pickupPoints, dropoffPoints, cleaningZoneNames, fleets } =
+    const { waypointNames, pickupPoints, dropoffPoints, palletPoints, cleaningZoneNames, fleets } =
       useTaskFormData(rmfApi);
+    const effectivePalletPoints =
+      taskRegistry.palletPoints && Object.keys(taskRegistry.palletPoints).length > 0
+        ? taskRegistry.palletPoints
+        : palletPoints;
     const username = profile.user.username;
 
     async function handleLogout(): Promise<void> {
@@ -465,7 +469,7 @@ export const AppBar = React.memo(
             cartIds={taskRegistry.cartIds}
             pickupPoints={pickupPoints}
             dropoffPoints={dropoffPoints}
-            palletPoints={taskRegistry.palletPoints}
+            palletPoints={effectivePalletPoints}
             favoritesTasks={favoritesTasks}
             open={openCreateTaskForm}
             onClose={() => setOpenCreateTaskForm(false)}

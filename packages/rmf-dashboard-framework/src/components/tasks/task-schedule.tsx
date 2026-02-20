@@ -68,11 +68,15 @@ const disablingCellsWithoutEvents = (
 export const TaskSchedule = () => {
   const rmfApi = useRmfApi();
   const { showAlert } = useAppController();
-
-  const { waypointNames, pickupPoints, dropoffPoints, cleaningZoneNames, fleets } =
-    useTaskFormData(rmfApi);
-  const username = useUserProfile().user.username;
   const taskRegistry = useTaskRegistry();
+
+  const { waypointNames, pickupPoints, dropoffPoints, palletPoints, cleaningZoneNames, fleets } =
+    useTaskFormData(rmfApi);
+  const effectivePalletPoints =
+    taskRegistry.palletPoints && Object.keys(taskRegistry.palletPoints).length > 0
+      ? taskRegistry.palletPoints
+      : palletPoints;
+  const username = useUserProfile().user.username;
   const [eventScope, setEventScope] = React.useState<string>(EventScopes.CURRENT);
   const [refreshTaskScheduleCount, setRefreshTaskScheduleCount] = React.useState(0);
   const exceptDateRef = React.useRef<Date>(new Date());
@@ -341,7 +345,7 @@ export const TaskSchedule = () => {
           tasksToDisplay={taskRegistry.taskDefinitions}
           patrolWaypoints={waypointNames}
           cleaningZones={cleaningZoneNames}
-          palletPoints={taskRegistry.palletPoints}
+          palletPoints={effectivePalletPoints}
           pickupPoints={pickupPoints}
           dropoffPoints={dropoffPoints}
           open={openCreateTaskForm}

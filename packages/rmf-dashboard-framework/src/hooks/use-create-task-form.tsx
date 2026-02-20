@@ -1,14 +1,16 @@
 import React from 'react';
 import { Subscription } from 'rxjs';
 
-import { getPlaces } from '../components/place';
+import { getPalletFlowPoints, getPlaces } from '../components/place';
 import { RmfApi } from '../services';
+import { PalletPointConfig } from './use-task-registry';
 
 export const useTaskFormData = (rmfApi: RmfApi | undefined) => {
   const [waypointNames, setWaypointNames] = React.useState<string[]>([]);
   const [cleaningZoneNames, setCleaningZoneNames] = React.useState<string[]>([]);
   const [pickupPoints, setPickupPoints] = React.useState<Record<string, string>>({});
   const [dropoffPoints, setDropoffPoints] = React.useState<Record<string, string>>({});
+  const [palletPoints, setPalletPoints] = React.useState<Record<string, PalletPointConfig>>({});
   const [fleets, setFleets] = React.useState<Record<string, string[]>>({});
 
   React.useEffect(() => {
@@ -20,6 +22,7 @@ export const useTaskFormData = (rmfApi: RmfApi | undefined) => {
     subs.push(
       rmfApi.buildingMapObs.subscribe((map) => {
         const places = getPlaces(map);
+        const mapPalletPoints = getPalletFlowPoints(map);
         const waypointNames: string[] = [];
         const pickupPoints: Record<string, string> = {};
         const dropoffPoints: Record<string, string> = {};
@@ -39,6 +42,7 @@ export const useTaskFormData = (rmfApi: RmfApi | undefined) => {
 
         setPickupPoints(pickupPoints);
         setDropoffPoints(dropoffPoints);
+        setPalletPoints(mapPalletPoints);
         setCleaningZoneNames(cleaningZoneNames);
         setWaypointNames(waypointNames);
       }),
@@ -59,5 +63,5 @@ export const useTaskFormData = (rmfApi: RmfApi | undefined) => {
     return () => subs.forEach((s) => s.unsubscribe());
   }, [rmfApi]);
 
-  return { waypointNames, pickupPoints, dropoffPoints, cleaningZoneNames, fleets };
+  return { waypointNames, pickupPoints, dropoffPoints, palletPoints, cleaningZoneNames, fleets };
 };

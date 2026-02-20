@@ -114,16 +114,6 @@ export default function App() {
           { taskDefinitionId: 'lift_command' },
           { taskDefinitionId: 'custom_compose' },
         ],
-        palletPoints: {
-          wp_8: {
-            approachWaypoint: 'wp_3',
-            retreatWaypoint: 'wp_3',
-          },
-          p2: {
-            approachWaypoint: 'w11',
-            retreatWaypoint: 'w11',
-          },
-        },
         pickupZones: [],
         cartIds: [],
       }}

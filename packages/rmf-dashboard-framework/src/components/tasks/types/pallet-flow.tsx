@@ -461,7 +461,7 @@ interface PalletPickTaskFormProps {
 
 export function PalletPickTaskForm({
   taskDesc,
-  patrolWaypoints,
+  patrolWaypoints: _patrolWaypoints,
   palletPoints,
   onChange,
   onValidate,
@@ -477,78 +477,43 @@ export function PalletPickTaskForm({
   }, [onValidate, taskDesc]);
 
   const pointNames = getPalletPointNames(palletPoints);
-  const usePointMapping = pointNames.length > 0;
-  const waypoints = [...patrolWaypoints].sort();
-
-  if (usePointMapping) {
-    return (
-      <Grid container spacing={theme.spacing(2)}>
-        <Grid item xs={12}>
-          <Autocomplete
-            id="pallet-pick-point"
-            freeSolo
-            fullWidth
-            options={pointNames}
-            value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[2])}
-            onChange={(_ev, newValue) => {
-              const pointName = newValue ?? '';
-              const resolved = resolvePalletPoint(palletPoints, pointName);
-              if (!resolved) {
-                let updatedDesc = setWaypointAt(taskDesc, 0, '');
-                updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
-                onInputChange({ ...updatedDesc });
-                return;
-              }
-              let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
-              onInputChange({ ...updatedDesc });
-            }}
-            onBlur={(ev) => {
-              const pointName = (ev.target as HTMLInputElement).value;
-              const resolved = resolvePalletPoint(palletPoints, pointName);
-              if (!resolved) {
-                let updatedDesc = setWaypointAt(taskDesc, 0, '');
-                updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
-                onInputChange({ ...updatedDesc });
-                return;
-              }
-              let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
-              onInputChange({ ...updatedDesc });
-            }}
-            renderInput={(params) => <TextField {...params} label="Point" required />}
-          />
-        </Grid>
-      </Grid>
-    );
-  }
 
   return (
     <Grid container spacing={theme.spacing(2)}>
-      <Grid item xs={6}>
-        <WaypointField
-          id="pallet-pick-approach"
-          label="Approach Waypoint"
-          value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[0])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 0, value),
-            })
-          }
-        />
-      </Grid>
-      <Grid item xs={6}>
-        <WaypointField
-          id="pallet-pick-parking"
-          label="Parking Waypoint"
+      <Grid item xs={12}>
+        <Autocomplete
+          id="pallet-pick-point"
+          freeSolo
+          fullWidth
+          options={pointNames}
           value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[2])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 2, value),
-            })
-          }
+          onChange={(_ev, newValue) => {
+            const pointName = newValue ?? '';
+            const resolved = resolvePalletPoint(palletPoints, pointName);
+            if (!resolved) {
+              let updatedDesc = setWaypointAt(taskDesc, 0, '');
+              updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
+              onInputChange({ ...updatedDesc });
+              return;
+            }
+            let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
+            onInputChange({ ...updatedDesc });
+          }}
+          onBlur={(ev) => {
+            const pointName = (ev.target as HTMLInputElement).value;
+            const resolved = resolvePalletPoint(palletPoints, pointName);
+            if (!resolved) {
+              let updatedDesc = setWaypointAt(taskDesc, 0, '');
+              updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
+              onInputChange({ ...updatedDesc });
+              return;
+            }
+            let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
+            onInputChange({ ...updatedDesc });
+          }}
+          renderInput={(params) => <TextField {...params} label="Point" required />}
         />
       </Grid>
     </Grid>
@@ -565,7 +530,7 @@ interface PalletDropTaskFormProps {
 
 export function PalletDropTaskForm({
   taskDesc,
-  patrolWaypoints,
+  patrolWaypoints: _patrolWaypoints,
   palletPoints,
   onChange,
   onValidate,
@@ -581,95 +546,47 @@ export function PalletDropTaskForm({
   }, [onValidate, taskDesc]);
 
   const pointNames = getPalletPointNames(palletPoints);
-  const usePointMapping = pointNames.length > 0;
-  const waypoints = [...patrolWaypoints].sort();
-
-  if (usePointMapping) {
-    return (
-      <Grid container spacing={theme.spacing(2)}>
-        <Grid item xs={12}>
-          <Autocomplete
-            id="pallet-drop-point"
-            freeSolo
-            fullWidth
-            options={pointNames}
-            value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[2])}
-            onChange={(_ev, newValue) => {
-              const pointName = newValue ?? '';
-              const resolved = resolvePalletPoint(palletPoints, pointName);
-              if (!resolved) {
-                let updatedDesc = setWaypointAt(taskDesc, 0, '');
-                updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
-                updatedDesc = setWaypointAt(updatedDesc, 3, '');
-                onInputChange({ ...updatedDesc });
-                return;
-              }
-              let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 3, resolved.retreatWaypoint);
-              onInputChange({ ...updatedDesc });
-            }}
-            onBlur={(ev) => {
-              const pointName = (ev.target as HTMLInputElement).value;
-              const resolved = resolvePalletPoint(palletPoints, pointName);
-              if (!resolved) {
-                let updatedDesc = setWaypointAt(taskDesc, 0, '');
-                updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
-                updatedDesc = setWaypointAt(updatedDesc, 3, '');
-                onInputChange({ ...updatedDesc });
-                return;
-              }
-              let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 3, resolved.retreatWaypoint);
-              onInputChange({ ...updatedDesc });
-            }}
-            renderInput={(params) => <TextField {...params} label="Point" required />}
-          />
-        </Grid>
-      </Grid>
-    );
-  }
 
   return (
     <Grid container spacing={theme.spacing(2)}>
-      <Grid item xs={4}>
-        <WaypointField
-          id="pallet-drop-approach"
-          label="Approach Waypoint"
-          value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[0])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 0, value),
-            })
-          }
-        />
-      </Grid>
-      <Grid item xs={4}>
-        <WaypointField
-          id="pallet-drop-parking"
-          label="Parking Waypoint"
+      <Grid item xs={12}>
+        <Autocomplete
+          id="pallet-drop-point"
+          freeSolo
+          fullWidth
+          options={pointNames}
           value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[2])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 2, value),
-            })
-          }
-        />
-      </Grid>
-      <Grid item xs={4}>
-        <WaypointField
-          id="pallet-drop-retreat"
-          label="Retreat Waypoint"
-          value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[3])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 3, value),
-            })
-          }
+          onChange={(_ev, newValue) => {
+            const pointName = newValue ?? '';
+            const resolved = resolvePalletPoint(palletPoints, pointName);
+            if (!resolved) {
+              let updatedDesc = setWaypointAt(taskDesc, 0, '');
+              updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
+              updatedDesc = setWaypointAt(updatedDesc, 3, '');
+              onInputChange({ ...updatedDesc });
+              return;
+            }
+            let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 3, resolved.retreatWaypoint);
+            onInputChange({ ...updatedDesc });
+          }}
+          onBlur={(ev) => {
+            const pointName = (ev.target as HTMLInputElement).value;
+            const resolved = resolvePalletPoint(palletPoints, pointName);
+            if (!resolved) {
+              let updatedDesc = setWaypointAt(taskDesc, 0, '');
+              updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
+              updatedDesc = setWaypointAt(updatedDesc, 3, '');
+              onInputChange({ ...updatedDesc });
+              return;
+            }
+            let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 3, resolved.retreatWaypoint);
+            onInputChange({ ...updatedDesc });
+          }}
+          renderInput={(params) => <TextField {...params} label="Point" required />}
         />
       </Grid>
     </Grid>
@@ -686,7 +603,7 @@ interface PalletTransferTaskFormProps {
 
 export function PalletTransferTaskForm({
   taskDesc,
-  patrolWaypoints,
+  patrolWaypoints: _patrolWaypoints,
   palletPoints,
   onChange,
   onValidate,
@@ -702,157 +619,83 @@ export function PalletTransferTaskForm({
   }, [onValidate, taskDesc]);
 
   const pointNames = getPalletPointNames(palletPoints);
-  const usePointMapping = pointNames.length > 0;
-  const waypoints = [...patrolWaypoints].sort();
-
-  if (usePointMapping) {
-    return (
-      <Grid container spacing={theme.spacing(2)}>
-        <Grid item xs={6}>
-          <Autocomplete
-            id="pallet-transfer-from-point"
-            freeSolo
-            fullWidth
-            options={pointNames}
-            value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[2])}
-            onChange={(_ev, newValue) => {
-              const pointName = newValue ?? '';
-              const resolved = resolvePalletPoint(palletPoints, pointName);
-              if (!resolved) {
-                let updatedDesc = setWaypointAt(taskDesc, 0, '');
-                updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
-                onInputChange({ ...updatedDesc });
-                return;
-              }
-              let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
-              onInputChange({ ...updatedDesc });
-            }}
-            onBlur={(ev) => {
-              const pointName = (ev.target as HTMLInputElement).value;
-              const resolved = resolvePalletPoint(palletPoints, pointName);
-              if (!resolved) {
-                let updatedDesc = setWaypointAt(taskDesc, 0, '');
-                updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
-                onInputChange({ ...updatedDesc });
-                return;
-              }
-              let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
-              onInputChange({ ...updatedDesc });
-            }}
-            renderInput={(params) => <TextField {...params} label="From Point" required />}
-          />
-        </Grid>
-        <Grid item xs={6}>
-          <Autocomplete
-            id="pallet-transfer-to-point"
-            freeSolo
-            fullWidth
-            options={pointNames}
-            value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[6])}
-            onChange={(_ev, newValue) => {
-              const pointName = newValue ?? '';
-              const resolved = resolvePalletPoint(palletPoints, pointName);
-              if (!resolved) {
-                let updatedDesc = setWaypointAt(taskDesc, 4, '');
-                updatedDesc = setWaypointAt(updatedDesc, 6, pointName);
-                updatedDesc = setWaypointAt(updatedDesc, 7, '');
-                onInputChange({ ...updatedDesc });
-                return;
-              }
-              let updatedDesc = setWaypointAt(taskDesc, 4, resolved.approachWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 6, resolved.parkingWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 7, resolved.retreatWaypoint);
-              onInputChange({ ...updatedDesc });
-            }}
-            onBlur={(ev) => {
-              const pointName = (ev.target as HTMLInputElement).value;
-              const resolved = resolvePalletPoint(palletPoints, pointName);
-              if (!resolved) {
-                let updatedDesc = setWaypointAt(taskDesc, 4, '');
-                updatedDesc = setWaypointAt(updatedDesc, 6, pointName);
-                updatedDesc = setWaypointAt(updatedDesc, 7, '');
-                onInputChange({ ...updatedDesc });
-                return;
-              }
-              let updatedDesc = setWaypointAt(taskDesc, 4, resolved.approachWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 6, resolved.parkingWaypoint);
-              updatedDesc = setWaypointAt(updatedDesc, 7, resolved.retreatWaypoint);
-              onInputChange({ ...updatedDesc });
-            }}
-            renderInput={(params) => <TextField {...params} label="To Point" required />}
-          />
-        </Grid>
-      </Grid>
-    );
-  }
 
   return (
     <Grid container spacing={theme.spacing(2)}>
-      <Grid item xs={4}>
-        <WaypointField
-          id="pallet-transfer-from-approach"
-          label="From Approach"
-          value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[0])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 0, value),
-            })
-          }
-        />
-      </Grid>
-      <Grid item xs={4}>
-        <WaypointField
-          id="pallet-transfer-from-parking"
-          label="From Parking"
+      <Grid item xs={6}>
+        <Autocomplete
+          id="pallet-transfer-from-point"
+          freeSolo
+          fullWidth
+          options={pointNames}
           value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[2])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 2, value),
-            })
-          }
-        />
-      </Grid>
-      <Grid item xs={4}>
-        <WaypointField
-          id="pallet-transfer-to-approach"
-          label="To Approach"
-          value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[4])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 4, value),
-            })
-          }
+          onChange={(_ev, newValue) => {
+            const pointName = newValue ?? '';
+            const resolved = resolvePalletPoint(palletPoints, pointName);
+            if (!resolved) {
+              let updatedDesc = setWaypointAt(taskDesc, 0, '');
+              updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
+              onInputChange({ ...updatedDesc });
+              return;
+            }
+            let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
+            onInputChange({ ...updatedDesc });
+          }}
+          onBlur={(ev) => {
+            const pointName = (ev.target as HTMLInputElement).value;
+            const resolved = resolvePalletPoint(palletPoints, pointName);
+            if (!resolved) {
+              let updatedDesc = setWaypointAt(taskDesc, 0, '');
+              updatedDesc = setWaypointAt(updatedDesc, 2, pointName);
+              onInputChange({ ...updatedDesc });
+              return;
+            }
+            let updatedDesc = setWaypointAt(taskDesc, 0, resolved.approachWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 2, resolved.parkingWaypoint);
+            onInputChange({ ...updatedDesc });
+          }}
+          renderInput={(params) => <TextField {...params} label="From Point" required />}
         />
       </Grid>
       <Grid item xs={6}>
-        <WaypointField
-          id="pallet-transfer-to-parking"
-          label="To Parking"
+        <Autocomplete
+          id="pallet-transfer-to-point"
+          freeSolo
+          fullWidth
+          options={pointNames}
           value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[6])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 6, value),
-            })
-          }
-        />
-      </Grid>
-      <Grid item xs={6}>
-        <WaypointField
-          id="pallet-transfer-to-retreat"
-          label="To Retreat"
-          value={getWaypointFromActivity(taskDesc.phases[0].activity.description.activities[7])}
-          waypoints={waypoints}
-          onChange={(value) =>
-            onInputChange({
-              ...setWaypointAt(taskDesc, 7, value),
-            })
-          }
+          onChange={(_ev, newValue) => {
+            const pointName = newValue ?? '';
+            const resolved = resolvePalletPoint(palletPoints, pointName);
+            if (!resolved) {
+              let updatedDesc = setWaypointAt(taskDesc, 4, '');
+              updatedDesc = setWaypointAt(updatedDesc, 6, pointName);
+              updatedDesc = setWaypointAt(updatedDesc, 7, '');
+              onInputChange({ ...updatedDesc });
+              return;
+            }
+            let updatedDesc = setWaypointAt(taskDesc, 4, resolved.approachWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 6, resolved.parkingWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 7, resolved.retreatWaypoint);
+            onInputChange({ ...updatedDesc });
+          }}
+          onBlur={(ev) => {
+            const pointName = (ev.target as HTMLInputElement).value;
+            const resolved = resolvePalletPoint(palletPoints, pointName);
+            if (!resolved) {
+              let updatedDesc = setWaypointAt(taskDesc, 4, '');
+              updatedDesc = setWaypointAt(updatedDesc, 6, pointName);
+              updatedDesc = setWaypointAt(updatedDesc, 7, '');
+              onInputChange({ ...updatedDesc });
+              return;
+            }
+            let updatedDesc = setWaypointAt(taskDesc, 4, resolved.approachWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 6, resolved.parkingWaypoint);
+            updatedDesc = setWaypointAt(updatedDesc, 7, resolved.retreatWaypoint);
+            onInputChange({ ...updatedDesc });
+          }}
+          renderInput={(params) => <TextField {...params} label="To Point" required />}
         />
       </Grid>
     </Grid>
