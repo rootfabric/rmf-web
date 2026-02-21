@@ -1,4 +1,5 @@
 import React from 'react';
+import { waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { RmfApiProvider } from '../../hooks';
@@ -29,7 +30,8 @@ describe('Task inspector', () => {
   it('Task inspector renders', async () => {
     const mockTaskState = makeTaskState('mock_task_id');
     const mockTaskLogs = makeTaskLog('mock_task_id');
-    rmfApi.tasksApi.getTaskLogTasksTaskIdLogGet = vi.fn().mockResolvedValue({ data: mockTaskLogs });
+    const fetchTaskLog = vi.fn().mockResolvedValue({ data: mockTaskLogs });
+    rmfApi.tasksApi.getTaskLogTasksTaskIdLogGet = fetchTaskLog;
 
     const onClose = vi.fn();
     const root = render(
@@ -40,5 +42,11 @@ describe('Task inspector', () => {
 
     expect(root.getByText(/mock_task_id/i)).toBeTruthy();
     expect(root.getByTestId('task-cancel-button')).toBeTruthy();
+
+    rmfApi.getTaskStateObs(mockTaskState.booking.id).next(mockTaskState);
+    await waitFor(() => expect(fetchTaskLog).toHaveBeenCalled());
+    const between = String(fetchTaskLog.mock.calls[0][1]);
+    expect(between).toMatch(/^0,\d+$/);
+    expect(between).not.toContain(String(Number.MAX_SAFE_INTEGER));
   });
 });

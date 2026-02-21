@@ -223,6 +223,21 @@ class TestTasksRoute(AppFixture):
         # Better to do this after this gets merged into main so we don't make
         # more architecture changes.
 
+    def test_get_task_log_with_invalid_between_returns_422(self):
+        task_id = self.task_logs[0].task_id
+
+        resp = self.client.get(f"/tasks/{task_id}/log?between=0,9007199254740991")
+        self.assertEqual(422, resp.status_code)
+
+        resp = self.client.get(f"/tasks/{task_id}/log?between=abc,123")
+        self.assertEqual(422, resp.status_code)
+
+        resp = self.client.get(f"/tasks/{task_id}/log?between=2000,1000")
+        self.assertEqual(422, resp.status_code)
+
+        resp = self.client.get(f"/tasks/{task_id}/log?between=-60000")
+        self.assertEqual(200, resp.status_code)
+
     def test_sub_task_log(self):
         task_id = self.task_logs[0].task_id
         with self.subscribe_sio(f"/tasks/{task_id}/log") as sub:

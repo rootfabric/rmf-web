@@ -1,5 +1,6 @@
 import { AlertRequest, ApiServerModelsAlertsAlertRequestTier } from 'api-client';
 import React from 'react';
+import { waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { RmfApiProvider } from '../hooks';
@@ -11,7 +12,8 @@ describe('Alert dialog', () => {
   rmfApi.alertsApi.getAlertResponseAlertsRequestAlertIdResponseGet = vi
     .fn()
     .mockResolvedValue({ data: [] });
-  rmfApi.tasksApi.getTaskLogTasksTaskIdLogGet = () => new Promise(() => {});
+  const getTaskLog = vi.fn().mockResolvedValue({ data: { task_id: 'test-task', phases: {} } });
+  rmfApi.tasksApi.getTaskLogTasksTaskIdLogGet = getTaskLog;
 
   const Base = (props: React.PropsWithChildren<{}>) => {
     return (
@@ -21,7 +23,7 @@ describe('Alert dialog', () => {
     );
   };
 
-  it('renders without crashing', () => {
+  it('renders without crashing', async () => {
     const alertRequest: AlertRequest = {
       id: 'test-alert',
       unix_millis_alert_time: 0,
@@ -46,6 +48,10 @@ describe('Alert dialog', () => {
     expect(root.getByTestId('test-alert-ok-button')).toBeTruthy();
     expect(root.getByTestId('task-cancel-button')).toBeTruthy();
     expect(root.getByTestId('dismiss-button')).toBeTruthy();
+    await waitFor(() => expect(getTaskLog).toHaveBeenCalled());
+    const between = String(getTaskLog.mock.calls[0][1]);
+    expect(between).toMatch(/^0,\d+$/);
+    expect(between).not.toContain(String(Number.MAX_SAFE_INTEGER));
   });
 });
 

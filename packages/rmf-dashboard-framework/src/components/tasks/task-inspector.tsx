@@ -33,7 +33,7 @@ export function TaskInspector({ task, onClose }: TableDataGridState): JSX.Elemen
           const logs = (
             await rmfApi.tasksApi.getTaskLogTasksTaskIdLogGet(
               subscribedTask.booking.id,
-              `0,${Number.MAX_SAFE_INTEGER}`,
+              `0,${Date.now()}`,
             )
           ).data;
           setTaskLogs(logs);

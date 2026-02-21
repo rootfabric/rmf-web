@@ -90,10 +90,7 @@ export const AlertDialog = React.memo((props: AlertDialogProps) => {
       let logs: TaskEventLog | null = null;
       try {
         logs = (
-          await rmfApi.tasksApi.getTaskLogTasksTaskIdLogGet(
-            alertRequest.task_id,
-            `0,${Number.MAX_SAFE_INTEGER}`,
-          )
+          await rmfApi.tasksApi.getTaskLogTasksTaskIdLogGet(alertRequest.task_id, `0,${Date.now()}`)
         ).data;
       } catch {
         console.log(
