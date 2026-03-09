@@ -2,6 +2,7 @@
 
 import asyncio
 import base64
+import copy
 import hashlib
 import logging
 from datetime import datetime
@@ -15,6 +16,7 @@ from fastapi import HTTPException
 from rclpy.subscription import Subscription
 from rmf_building_map_msgs.msg import AffineImage as RmfAffineImage
 from rmf_building_map_msgs.msg import BuildingMap as RmfBuildingMap
+from rmf_building_map_msgs.msg import Graph as RmfGraph
 from rmf_building_map_msgs.msg import Level as RmfLevel
 from rmf_dispenser_msgs.msg import DispenserState as RmfDispenserState
 from rmf_door_msgs.msg import DoorMode as RmfDoorMode
@@ -129,6 +131,8 @@ class RmfGateway:
         )
 
         self._subscriptions: list[Subscription] = []
+        self._latest_base_building_map: BuildingMap | None = None
+        self._overlay_nav_graphs: dict[str, dict[str, Any]] = {}
 
         self._subscribe_all()
 
@@ -167,6 +171,60 @@ class RmfGateway:
                 urlpath = self._cached_files.add_file(cast(bytes, image.data), relpath)
                 processed_map["levels"][i]["images"][j]["data"] = urlpath
         return BuildingMap(**processed_map)
+
+    @staticmethod
+    def _extract_level_name_from_graph(msg: RmfGraph) -> str | None:
+        for vertex in msg.vertices:
+            for param in vertex.params:
+                if param.name != "map_name":
+                    continue
+                if param.value_string:
+                    return str(param.value_string)
+        return None
+
+    def _apply_nav_graph_overlays(self, base_map: BuildingMap) -> BuildingMap:
+        if not self._overlay_nav_graphs:
+            return base_map
+
+        merged_map = base_map.model_dump()
+        levels = merged_map.get("levels", [])
+        if not levels:
+            return base_map
+
+        level_index_by_name = {}
+        for i, level in enumerate(levels):
+            level_name = str(level.get("name", "")).strip()
+            if level_name:
+                level_index_by_name[level_name] = i
+
+        fallback_level = str(levels[0].get("name", "")).strip() if levels else ""
+
+        for graph_name, payload in self._overlay_nav_graphs.items():
+            level_name = str(payload.get("level_name", "")).strip() or fallback_level
+            if not level_name:
+                continue
+
+            level_idx = level_index_by_name.get(level_name)
+            if level_idx is None:
+                continue
+
+            graph_data = copy.deepcopy(payload.get("graph", {}))
+            if not isinstance(graph_data, dict):
+                continue
+            graph_data["name"] = graph_name
+
+            nav_graphs = levels[level_idx].setdefault("nav_graphs", [])
+            replaced = False
+            for i, existing in enumerate(nav_graphs):
+                if str(existing.get("name", "")).strip() == graph_name:
+                    nav_graphs[i] = graph_data
+                    replaced = True
+                    break
+
+            if not replaced:
+                nav_graphs.append(graph_data)
+
+        return BuildingMap(**merged_map)
 
     def _subscribe_all(self):
         def handle_door_state(msg):
@@ -234,14 +292,16 @@ class RmfGateway:
         )
         self._subscriptions.append(ingestor_states_sub)
 
-        def handle_building_map(msg):
-            async def save(building_map: BuildingMap):
-                await self._rmf_repo.save_building_map(building_map)
-                self._rmf_events.building_map.on_next(building_map)
-                logging.debug("%s", building_map)
+        async def save_building_map(building_map: BuildingMap):
+            await self._rmf_repo.save_building_map(building_map)
+            self._rmf_events.building_map.on_next(building_map)
+            logging.debug("%s", building_map)
 
-            bm = self._process_building_map(cast(RmfBuildingMap, msg))
-            self._loop.create_task(save(bm))
+        def handle_building_map(msg):
+            base_map = self._process_building_map(cast(RmfBuildingMap, msg))
+            self._latest_base_building_map = base_map
+            merged_map = self._apply_nav_graph_overlays(base_map)
+            self._loop.create_task(save_building_map(merged_map))
 
         map_sub = self._ros_node.create_subscription(
             RmfBuildingMap,
@@ -255,6 +315,36 @@ class RmfGateway:
             ),
         )
         self._subscriptions.append(map_sub)
+
+        def handle_nav_graph(msg):
+            msg = cast(RmfGraph, msg)
+            graph_name = str(msg.name or "").strip()
+            if not graph_name:
+                return
+
+            self._overlay_nav_graphs[graph_name] = {
+                "level_name": self._extract_level_name_from_graph(msg),
+                "graph": message_to_ordereddict(msg),
+            }
+
+            if self._latest_base_building_map is None:
+                return
+
+            merged_map = self._apply_nav_graph_overlays(self._latest_base_building_map)
+            self._loop.create_task(save_building_map(merged_map))
+
+        nav_graph_sub = self._ros_node.create_subscription(
+            RmfGraph,
+            "nav_graphs",
+            handle_nav_graph,
+            rclpy.qos.QoSProfile(
+                history=rclpy.qos.HistoryPolicy.KEEP_LAST,
+                depth=20,
+                reliability=rclpy.qos.ReliabilityPolicy.RELIABLE,
+                durability=rclpy.qos.DurabilityPolicy.TRANSIENT_LOCAL,
+            ),
+        )
+        self._subscriptions.append(nav_graph_sub)
 
         def handle_beacon_state(msg):
             async def save(beacon_state: BeaconState):
