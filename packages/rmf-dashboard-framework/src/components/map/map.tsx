@@ -230,6 +230,7 @@ export const Map = styled((props: MapProps) => {
   const [zoom, setZoom] = React.useState<number>(props.defaultZoom);
   const [sceneBoundingBox, setSceneBoundingBox] = React.useState<Box3 | undefined>(undefined);
   const [distance, setDistance] = React.useState<number>(0);
+  const previousLevelRef = React.useRef<Level | undefined>(undefined);
 
   React.useEffect(() => {
     const subs: Subscription[] = [];
@@ -243,13 +244,16 @@ export const Map = styled((props: MapProps) => {
         const newSceneBoundingBox = currentValue
           ? findSceneBoundingBoxFromThreeFiber(currentValue)
           : undefined;
-        if (newSceneBoundingBox) {
+        // Only reset camera if level actually changed
+        const previousLevel = previousLevelRef.current;
+        if (newSceneBoundingBox && (!previousLevel || previousLevel.name !== currentValue?.name)) {
           const center = newSceneBoundingBox.getCenter(new Vector3());
           const size = newSceneBoundingBox.getSize(new Vector3());
           const distance = Math.max(size.x, size.y, size.z) * 0.7;
           const newZoom = AppEvents.zoom.value ?? props.defaultZoom;
           AppEvents.resetCamera.next([center.x, center.y, center.z + distance, newZoom]);
         }
+        previousLevelRef.current = currentValue ?? undefined;
         setCurrentLevel(currentValue ?? undefined);
         setSceneBoundingBox(newSceneBoundingBox);
       }),
