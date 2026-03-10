@@ -247,7 +247,7 @@ export const Map = styled((props: MapProps) => {
           const center = newSceneBoundingBox.getCenter(new Vector3());
           const size = newSceneBoundingBox.getSize(new Vector3());
           const distance = Math.max(size.x, size.y, size.z) * 0.7;
-          const newZoom = props.defaultZoom;
+          const newZoom = AppEvents.zoom.value ?? props.defaultZoom;
           AppEvents.resetCamera.next([center.x, center.y, center.z + distance, newZoom]);
         }
         setCurrentLevel(currentValue ?? undefined);

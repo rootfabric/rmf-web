@@ -4,16 +4,17 @@
   "description": "Open-RMF API server",
   "private": true,
   "scripts": {
-    "prepack": "../../.venv/bin/pipenv run python setup.py bdist_wheel",
-    "restart": "RMF_API_SERVER_CONFIG=sqlite_local_config.py ../../.venv/bin/pipenv run python -m api_server",
-    "start": "rm -rf run && mkdir -p run/cache && RMF_API_SERVER_CONFIG=${RMF_API_SERVER_CONFIG:-sqlite_local_config.py} ../../.venv/bin/pipenv run python -m api_server",
-    "start:psql": "rm -rf run && mkdir -p run/cache && RMF_API_SERVER_CONFIG=psql_local_config.py ../../.venv/bin/pipenv run python -m api_server",
-    "test": "../../.venv/bin/pipenv run python scripts/test.py",
-    "test:cov": "../../.venv/bin/pipenv run python -m coverage run scripts/test.py",
-    "test:report": "../../.venv/bin/pipenv run python -m coverage html && xdg-open htmlcov/index.html",
-    "lint": "../../.venv/bin/pipenv run pyright && ../../.venv/bin/pipenv run pylint --rcfile=../../.pylintrc api_server --ignore=ros_pydantic,rmf_api,rmf_ros2",
+    "ensure-pipenv": "[ -x ../../.venv/bin/pipenv ] || (cd ../.. && pnpm --filter pipenv-install install)",
+    "prepack": "pnpm run ensure-pipenv && ../../.venv/bin/pipenv run python setup.py bdist_wheel",
+    "restart": "pnpm run ensure-pipenv && RMF_API_SERVER_CONFIG=sqlite_local_config.py ../../.venv/bin/pipenv run python -m api_server",
+    "start": "pnpm run ensure-pipenv && rm -rf run && mkdir -p run/cache && RMF_API_SERVER_CONFIG=${RMF_API_SERVER_CONFIG:-sqlite_local_config.py} ../../.venv/bin/pipenv run python -m api_server",
+    "start:psql": "pnpm run ensure-pipenv && rm -rf run && mkdir -p run/cache && RMF_API_SERVER_CONFIG=psql_local_config.py ../../.venv/bin/pipenv run python -m api_server",
+    "test": "pnpm run ensure-pipenv && ../../.venv/bin/pipenv run python scripts/test.py",
+    "test:cov": "pnpm run ensure-pipenv && ../../.venv/bin/pipenv run python -m coverage run scripts/test.py",
+    "test:report": "pnpm run ensure-pipenv && ../../.venv/bin/pipenv run python -m coverage html && xdg-open htmlcov/index.html",
+    "lint": "pnpm run ensure-pipenv && ../../.venv/bin/pipenv run pyright && ../../.venv/bin/pipenv run pylint --rcfile=../../.pylintrc api_server --ignore=ros_pydantic,rmf_api,rmf_ros2",
     "generate-models": "./generate-models.sh",
-    "generate-docs": "RMF_API_SERVER_CONFIG=scripts/docs_config.py ../../.venv/bin/pipenv run python scripts/extract_docs.py -o docs"
+    "generate-docs": "pnpm run ensure-pipenv && RMF_API_SERVER_CONFIG=scripts/docs_config.py ../../.venv/bin/pipenv run python scripts/extract_docs.py -o docs"
   },
   "devDependencies": {
     "pipenv-install": "workspace:*"
