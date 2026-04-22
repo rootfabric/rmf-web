@@ -22,6 +22,40 @@ import { useAppController, useRmfApi } from '../hooks';
 import { AppEvents } from './app-events';
 import { TaskCancelButton } from './tasks/task-cancellation';
 
+const MISSION_RESULT_AUTO_CLOSE_MS = 5000;
+const ACKNOWLEDGE_ONLY_RESPONSES = new Set(['acknowledge', 'dismiss', 'ok']);
+const TERMINAL_RESULT_KEYWORDS = [
+  'completed',
+  'failed',
+  'canceled',
+  'cancelled',
+  'killed',
+  'success',
+  'succeeded',
+];
+
+function isMissionResultAlert(alertRequest: AlertRequest): boolean {
+  if (!alertRequest.task_id) {
+    return false;
+  }
+
+  if (alertRequest.responses_available.length > 1) {
+    return false;
+  }
+
+  if (
+    alertRequest.responses_available.length === 1 &&
+    !ACKNOWLEDGE_ONLY_RESPONSES.has(alertRequest.responses_available[0].trim().toLowerCase())
+  ) {
+    return false;
+  }
+
+  const searchableText = `${alertRequest.title} ${alertRequest.subtitle} ${alertRequest.message}`
+    .trim()
+    .toLowerCase();
+  return TERMINAL_RESULT_KEYWORDS.some((keyword) => searchableText.includes(keyword));
+}
+
 export interface AlertDialogProps {
   alertRequest: AlertRequest;
   onDismiss: () => void;
@@ -33,6 +67,7 @@ export const AlertDialog = React.memo((props: AlertDialogProps) => {
   const { showAlert } = useAppController();
   const rmfApi = useRmfApi();
   const [additionalAlertMessage, setAdditionalAlertMessage] = React.useState<string | null>(null);
+  const autoCloseMissionResult = isMissionResultAlert(alertRequest);
 
   const respondToAlert = async (alert_id: string, response: string) => {
     try {
@@ -55,6 +90,11 @@ export const AlertDialog = React.memo((props: AlertDialogProps) => {
     console.log(successMessage);
     showAlert('success', successMessage);
   };
+
+  const closeDialog = React.useCallback(() => {
+    onDismiss();
+    setIsOpen(false);
+  }, [onDismiss]);
 
   const getErrorLogEntries = (logs: TaskEventLog) => {
     const errorLogs: LogEntry[] = [];
@@ -110,6 +150,18 @@ export const AlertDialog = React.memo((props: AlertDialogProps) => {
       }
     })();
   }, [rmfApi, alertRequest.id, alertRequest.task_id, alertRequest.tier]);
+
+  React.useEffect(() => {
+    if (!isOpen || !autoCloseMissionResult) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      closeDialog();
+    }, MISSION_RESULT_AUTO_CLOSE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [autoCloseMissionResult, closeDialog, isOpen]);
 
   const theme = useTheme();
 
@@ -231,8 +283,7 @@ export const AlertDialog = React.memo((props: AlertDialogProps) => {
             padding: '6px 12px',
           }}
           onClick={() => {
-            onDismiss();
-            setIsOpen(false);
+            closeDialog();
           }}
         >
           Dismiss

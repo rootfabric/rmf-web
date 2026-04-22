@@ -4,7 +4,13 @@ from logging import LoggerAdapter
 
 from fastapi.requests import HTTPConnection
 from termcolor import colored
-from termcolor._types import Color
+
+try:
+    from termcolor._types import Color
+except ImportError:
+    from typing import Any
+
+    Color = Any  # type: ignore
 
 from .app_config import app_config
 from .models import User
